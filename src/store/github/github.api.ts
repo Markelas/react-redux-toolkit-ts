@@ -1,6 +1,6 @@
 import {createApi, fetchBaseQuery} from "@reduxjs/toolkit/query/react";
 import {EndpointBuilder} from "@reduxjs/toolkit/dist/query/endpointDefinitions";
-import {IUser, ServerResponse} from "../../models/models";
+import {IRepo, IUser, ServerResponse} from "../../models/models";
 
 //Создаем обращение к API, с помощью createApi
 export const githubApi = createApi({
@@ -26,7 +26,7 @@ export const githubApi = createApi({
             transformResponse: (response: ServerResponse<IUser>) => response.items
         }),
         //Запрос по получению репозиториев по никнейму, который мы выбираем в выпадающем поиске
-        getUserRepos: build.query<any, string>({
+        getUserRepos: build.query<IRepo[], string>({
             query: (username: string) => ({
                 url: `users/${username}/repos`
             })
