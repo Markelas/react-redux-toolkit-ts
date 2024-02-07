@@ -1,22 +1,31 @@
 import React, {useEffect, useState} from 'react';
-import {useSearchUsersQuery} from "../store/github/github.api";
+import {useLazyGetUserReposQuery, useSearchUsersQuery} from "../store/github/github.api";
 import {useDebounce} from "../hooks/debounce";
 
 const HomePage = () => {
     // По умолчанию пустая строка в поиске
     const [search, setSearch] = useState('')
+
+    const [dropdown, setDropdown] = useState(false)
     // Будем помещать введенные значения и через некоторую задержку, возвращать обратно строку
     const debounced = useDebounce(search)
     const {isLoading, isError, data} = useSearchUsersQuery(debounced, {
         // В параметр мы указываем, что когда указано меньше 3 символов, то не делаем запрос
-        skip: debounced.length < 3
+        skip: debounced.length < 3,
+        //Открыли вкладку, ушли и через какое-то время возвращаемся, будет повторный запрос, для обновления данных
+        refetchOnFocus: true
     })
 
-    useEffect(() => {
-        console.log(debounced)
-    }, [debounced]);
+    const [fetchRepos, { isLoading: areReposLoading, data: repos }] = useLazyGetUserReposQuery()
 
-    console.log(data)
+    useEffect(() => {
+        setDropdown(debounced.length > 3 && data?.length! > 0)
+    }, [debounced, data]);
+
+    const clickHandler = (username: string) => {
+        //Когда срабатывает клик на никнейме, мы пользуемся хуком, для запроса репозитория пользователя
+        fetchRepos(username)
+    }
 
     return (
         <div className='flex justify-center pt-10 mx-auto h-screen w-screen'>
@@ -31,15 +40,30 @@ const HomePage = () => {
                     onChange={e => setSearch(e.target.value)}
                 />
 
-                <div className="absolute
+                {dropdown && <ul className="
+                    list-nonte
+                    absolute
                     top-[42px]
                     left-0
                     right-0
                     max-h-[200px]
                     shadow-md
-                    bg-white"
+                    bg-white
+                    overflow-y-scroll"
                 >
-                    Lorem fsdf
+                    {isLoading && <p className='text-center'>Loading...</p>}
+                    {data?.map(user => (
+                        <li
+                            key={user.id}
+                            onClick={() => clickHandler(user.login)}
+                            className='py-2 px-4 hover:bg-gray-500 hover:text-white transition-colors cursor-pointer'
+                        >
+                            {user.login}
+                        </li>
+                    ))}
+                </ul>}
+                <div className="container">
+                    {areReposLoading && <p className='text-center'>Repos are loading...</p>}
                 </div>
             </div>
         </div>

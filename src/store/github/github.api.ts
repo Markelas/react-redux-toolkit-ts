@@ -10,6 +10,7 @@ export const githubApi = createApi({
     baseQuery: fetchBaseQuery({
         baseUrl: 'https://api.github.com'
     }),
+    refetchOnFocus: true,
     endpoints: build =>  ({
         searchUsers: build.query<IUser[], string>({
             //query будет соединяться с базовым URL
@@ -23,9 +24,16 @@ export const githubApi = createApi({
                 }
             }),
             transformResponse: (response: ServerResponse<IUser>) => response.items
+        }),
+        //Запрос по получению репозиториев по никнейму, который мы выбираем в выпадающем поиске
+        getUserRepos: build.query<any, string>({
+            query: (username: string) => ({
+                url: `users/${username}/repos`
+            })
         })
     })
 })
 
 //Делаем кастомный хук, чтобы использовать его
-export const {useSearchUsersQuery} = githubApi
+// В useLazyGetUserReposQuery, Lazy означает, что можем сделать запрос тогда, когда захотим
+export const {useSearchUsersQuery, useLazyGetUserReposQuery} = githubApi
